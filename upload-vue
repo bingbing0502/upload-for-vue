@@ -1,0 +1,133 @@
+<template>
+  <form  enctype="multipart/form-data" method="post">
+    <a class="btn btn-sm btn-default btn-upload">
+      <span>选择文件</span>
+      <input type="file" id="file" class="btn btn-primary" :name="name" @change = "inputfile()"  :multiple="mutifile">
+    </a> 
+  　<input type="button" value="上传"  @click = "fileUpload()" class="btn btn-sm btn-primary" :disabled="disabled"/>&nbsp;
+    <span v-for = "item in nameArr">{{item.name}}</span>
+    <span class="text-red">{{errorMsg}}</span>
+  </form>
+</template>
+<script>
+export default {
+  components: {},
+  data () {
+    return {
+      file:[],
+      nameArr:[],
+      errorMsg:'',
+      disabled:false
+    }
+  },
+  methods:{
+    //选择文件后所触发的事件
+    inputfile(){
+      this.disabled=false;
+      this.errorMsg = "";
+      var length = 0 ;
+      this.file = document.getElementById('file').files;
+      length = this.file.length ; 
+      var name = this.file.name ;
+      var Reg = `.${this.type}$`
+      var RegTest = new RegExp(Reg,'ig');
+      var _arr = [];
+      this.$set('nameArr', _arr) ;
+      //检验文件后缀
+      for(var i = 0 ; i < length ; i++ ){
+        if (!RegTest.test(this.file[i].name )  ) {
+          this.errorMsg = "请选择正确后缀的文件";
+          this.disabled=true;
+          return ;
+        }
+        _arr[i] = {} ; 
+        _arr[i].name = this.file[i].name ;
+      }
+      this.$set('nameArr', _arr) 
+      this.inputCallFun();
+    },
+    fileUpload(){
+      if(this.file.length == 0){
+        this.errorMsg = "请选择文件后再上传！";
+          return ;
+      }
+      for(var i = 0 ; i < this.file.length ; i++ ){
+        if (this.file[i].name == ""  ) {
+          this.errorMsg = "请选择文件后再上传！";
+          return ;
+        }
+      }
+      if(window.FormData) {　
+        var formData = new FormData();
+        // 建立一个upload表单项，值为上传的文件
+        length = this.file.length ; 
+          for(var i = 0 ; i < length ; i++ ){
+            formData.append('upload',this.file[i]);
+          }
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', this.address,true);
+        // 定义上传完成后的回调函数
+        var _this = this ;
+        xhr.onload = function () {
+        if (xhr.status === 200) {
+          _this.file = [];
+          _this.nameArr = [];
+          _this.sucCallFun();
+          } else {
+          _this.falCallFun();
+          }
+        };
+      xhr.send(formData);
+      }
+    }
+  },
+  props:{
+    name :{
+      type:String
+    },
+    mutifile:{
+      type:Boolean,
+      default: false
+    },
+    autoupload:{
+      type:Boolean,
+      default: false
+    },
+    type:{
+      type:String
+    },
+    address:{
+      type:String
+    },
+    inputCallFun:{
+      type:Function,
+      default:function(){}
+    },
+    sucCallFun:{
+      type:Function,
+      default:function(){alert('上传成功！')}
+    },
+    falCallFun:{
+      type:Function,
+      default:function(){alert('上传失败，请重新上传一次！')}
+    }
+  }
+
+}
+</script>
+<style lang="less">
+ .btn-upload {
+    position: relative;
+    overflow: hidden;
+}
+.btn-upload input {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+}
+</style>
