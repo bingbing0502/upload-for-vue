@@ -4,7 +4,7 @@
       <span>选择文件</span>
       <input type="file" id="file" class="btn btn-primary" :name="name" @change = "inputfile()"  :multiple="mutifile">
     </a> 
-  　<input type="button" value="上传"  @click = "fileUpload()" class="btn btn-sm btn-primary" :disabled="disabled"/>&nbsp;
+  　<input type="button" value="上传"  @click = "fileUpload()" class="btn btn-sm btn-primary setmargin" :disabled="disabled"/>
     <span v-for = "item in nameArr">{{item.name}}</span>
     <span class="text-red">{{errorMsg}}</span>
   </form>
@@ -23,51 +23,53 @@ export default {
   methods:{
     //选择文件后所触发的事件
     inputfile(){
+      let name = this.file.name ;
+      let _arr = [];
+      let _this = this ;
+      this.$set('nameArr', _arr) ;
       this.disabled=false;
       this.errorMsg = "";
-      var length = 0 ;
       this.file = document.getElementById('file').files;
-      length = this.file.length ; 
-      var name = this.file.name ;
-      var Reg = `.${this.type}$`
-      var RegTest = new RegExp(Reg,'ig');
-      var _arr = [];
-      this.$set('nameArr', _arr) ;
+      this.type = this.type.join('|');
+      let RegTest = new RegExp(`.${this.type}$`,'i');
       //检验文件后缀
-      for(var i = 0 ; i < length ; i++ ){
-        if (!RegTest.test(this.file[i].name )  ) {
-          this.errorMsg = "请选择正确后缀的文件";
-          this.disabled=true;
+      this.file.forEach( function(element, index) {
+        if (!RegTest.test(element.name )  ) {
+          _this.errorMsg = "请选择正确后缀的文件";
+          _this.disabled=true;
           return ;
         }
-        _arr[i] = {} ; 
-        _arr[i].name = this.file[i].name ;
-      }
+        _arr[index] = {} ; 
+        _arr[index].name = element.name ;
+      });
       this.$set('nameArr', _arr) 
-      this.inputCallFun();
+      this.inputCallFun(this.file);
     },
-    fileUpload(){
+    judgeSuffix(){
+      let this = _this ;
       if(this.file.length == 0){
         this.errorMsg = "请选择文件后再上传！";
           return ;
       }
-      for(var i = 0 ; i < this.file.length ; i++ ){
-        if (this.file[i].name == ""  ) {
-          this.errorMsg = "请选择文件后再上传！";
+      this.file.forEach( function(element,index){
+        if (element.name == ""  ) {
+          _this.errorMsg = "请选择文件后再上传！";
           return ;
         }
-      }
-      if(window.FormData) {　
-        var formData = new FormData();
+      })
+    },
+    fileUpload(){
+      let _this = this ;
+      this.judgeSuffix();
+      if(typeof FormData !=== 'undefined') {　
+        let formData = new FormData();
+        let xhr = new XMLHttpRequest();
         // 建立一个upload表单项，值为上传的文件
-        length = this.file.length ; 
-          for(var i = 0 ; i < length ; i++ ){
-            formData.append('upload',this.file[i]);
-          }
-        var xhr = new XMLHttpRequest();
+        this.file.forEach( function(element,index){
+          formData.append('upload',element);
+        })
         xhr.open('POST', this.address,true);
         // 定义上传完成后的回调函数
-        var _this = this ;
         xhr.onload = function () {
         if (xhr.status === 200) {
           _this.file = [];
@@ -94,7 +96,7 @@ export default {
       default: false
     },
     type:{
-      type:String
+      type:Array
     },
     address:{
       type:String
@@ -129,5 +131,8 @@ export default {
     font-size: 20px;
     cursor: pointer;
     opacity: 0;
+}
+.setmargin{
+  margin-right:10px;
 }
 </style>
