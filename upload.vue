@@ -2,7 +2,7 @@
   <form  enctype="multipart/form-data" method="post">
     <a class="btn btn-sm btn-default btn-upload">
       <span>选择文件</span>
-      <input type="file" id="file" class="btn btn-primary" :name="name" @change = "inputfile()"  :multiple="mutifile">
+      <input type="file" id="file" class="btn btn-primary" :name="name" @change = "inputfile()"  :multiple="mutifile" v-el:file>
     </a> 
   　<input type="button" value="上传"  @click = "fileUpload()" class="btn btn-sm btn-primary setmargin" :disabled="disabled"/>
     <span v-for = "item in nameArr">{{item.name}}</span>
@@ -27,21 +27,21 @@ export default {
       let _arr = [];
       let _this = this ;
       this.$set('nameArr', _arr) ;
-      this.disabled=false;
+      this.disabled = false;
       this.errorMsg = "";
-      this.file = document.getElementById('file').files;
+      this.file = this.$els.file.files;
       this.type = this.type.join('|');
       let RegTest = new RegExp(`.${this.type}$`,'i');
       //检验文件后缀
-      this.file.forEach( function(element, index) {
-        if (!RegTest.test(element.name )  ) {
-          _this.errorMsg = "请选择正确后缀的文件";
-          _this.disabled=true;
+      for(var i = 0 ; i < this.file.length ; i++ ){
+        if (!RegTest.test(this.file[i].name )  ) {
+          this.errorMsg = "请选择正确后缀的文件";
+          this.disabled=true;
           return ;
         }
-        _arr[index] = {} ; 
-        _arr[index].name = element.name ;
-      });
+        _arr[i] = {} ; 
+        _arr[i].name = this.file[i].name ;
+      }
       this.$set('nameArr', _arr) 
       this.inputCallFun(this.file);
     },
@@ -54,20 +54,23 @@ export default {
       this.file.forEach( function(element,index){
         if (element.name == ""  ) {
           _this.errorMsg = "请选择文件后再上传！";
-          return ;
+          return false;
         }
       })
     },
     fileUpload(){
       let _this = this ;
-      this.judgeSuffix();
+      if(!this.judgeSuffix()){ return };
       if(typeof FormData !=== 'undefined') {　
         let formData = new FormData();
         let xhr = new XMLHttpRequest();
         // 建立一个upload表单项，值为上传的文件
-        this.file.forEach( function(element,index){
-          formData.append('upload',element);
-        })
+        for(var i = 0 ; i < this.file.length ; i++ ){
+        if (this.file[i].name == ""  ) {
+          this.errorMsg = "请选择文件后再上传！";
+          return ;
+        }
+      }
         xhr.open('POST', this.address,true);
         // 定义上传完成后的回调函数
         xhr.onload = function () {
